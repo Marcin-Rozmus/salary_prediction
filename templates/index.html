@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salary Prediction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Salary Prediction</h1>
+        
+        <div class="all-salary-inputs">
+            <div class="range-input">
+                <label for="min">MIN</label>
+                <input type="number" id="min" name="min" value="{{ values.min }}">
+            </div>
+            <div class="range-input">
+                <label for="min-mid">MIN MID</label>
+                <input type="number" id="min-mid" name="min-mid" value="{{ values.min_mid }}">
+            </div>
+            <div class="range-input">
+                <label for="mid">MID</label>
+                <input type="number" id="mid" name="mid" value="{{ values.mid }}">
+            </div>
+            <div class="range-input">
+                <label for="mid-max">MID MAX</label>
+                <input type="number" id="mid-max" name="mid-max" value="{{ values.mid_max }}">
+            </div>
+            <div class="range-input">
+                <label for="max">MAX</label>
+                <input type="number" id="max" name="max" value="{{ values.max }}">
+            </div>
+            <div class="range-input">
+                <label for="current-salary">Current Salary</label>
+                <input type="number" id="current-salary" name="current-salary" value="{{ values.current_salary }}">
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="salaryChart"></canvas>
+        </div>
+
+        <div class="prediction-inputs">
+            <div class="input-group">
+                <label for="market-growth">Market Growth (%)</label>
+                <input type="number" id="market-growth" name="market-growth" value="{{ values.market_growth }}">
+            </div>
+            <div class="input-group">
+                <label for="raise">Raise (%)</label>
+                <input type="number" id="raise" name="raise" value="{{ values.raise }}">
+            </div>
+        </div>
+
+        <button id="predict-button">Predict</button>
+
+        <div id="prediction-results" style="display: none;">
+            <h2>Predictions for the next 5 years</h2>
+            <div class="prediction-table-container">
+                <table class="prediction-table">
+                    <thead>
+                        <tr>
+                            <th>Year</th>
+                            <th>Salary</th>
+                            <th>MIN</th>
+                            <th>MIN MID</th>
+                            <th>MID</th>
+                            <th>MID MAX</th>
+                            <th>MAX</th>
+                            <th>Chart</th>
+                        </tr>
+                    </thead>
+                    <tbody id="prediction-table-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html> 
