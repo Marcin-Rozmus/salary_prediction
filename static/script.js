@@ -1,4 +1,5 @@
 let salaryChart;
+let isDragging = false;
 
 function drawSalaryBar() {
     const canvas = document.getElementById('salaryChart');
@@ -13,7 +14,8 @@ function drawSalaryBar() {
     const mid = parseFloat(document.getElementById('mid').value) || 0;
     const midMax = parseFloat(document.getElementById('mid-max').value) || 0;
     const max = parseFloat(document.getElementById('max').value) || 0;
-    const currentSalary = parseFloat(document.getElementById('current-salary').value) || 0;
+    const currentSalaryInput = document.getElementById('current-salary');
+    const currentSalary = parseFloat(currentSalaryInput.value) || 0;
 
     const margin = 40;
     const barHeight = 30;
@@ -23,7 +25,11 @@ function drawSalaryBar() {
 
     const scaleX = (value) => {
         return margin + (value - min) * chartWidth / (max - min);
-    }
+    };
+
+    const unscaleX = (x) => {
+        return min + (x - margin) * (max - min) / chartWidth;
+    };
 
     const gradient = ctx.createLinearGradient(margin, 0, width - margin, 0);
     gradient.addColorStop(0, 'rgba(255, 59, 48, 0.2)');
@@ -85,6 +91,65 @@ function drawSalaryBar() {
     }
 }
 
+function handleMouseDown(e) {
+    const canvas = document.getElementById('salaryChart');
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    const min = parseFloat(document.getElementById('min').value) || 0;
+    const max = parseFloat(document.getElementById('max').value) || 0;
+    const currentSalary = parseFloat(document.getElementById('current-salary').value) || 0;
+    
+    const margin = 40;
+    const barY = canvas.height / 2;
+    const chartWidth = canvas.width - 2 * margin;
+    
+    const scaleX = (value) => {
+        return margin + (value - min) * chartWidth / (max - min);
+    };
+    
+    const currentX = scaleX(currentSalary);
+    const distance = Math.sqrt(Math.pow(x - currentX, 2) + Math.pow(y - barY, 2));
+    
+    if (distance <= 20) {
+        isDragging = true;
+        e.preventDefault();
+    }
+}
+
+function handleMouseMove(e) {
+    if (!isDragging) return;
+    
+    const canvas = document.getElementById('salaryChart');
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    
+    const min = parseFloat(document.getElementById('min').value) || 0;
+    const max = parseFloat(document.getElementById('max').value) || 0;
+    
+    const margin = 40;
+    const chartWidth = canvas.width - 2 * margin;
+    
+    const unscaleX = (x) => {
+        return min + (x - margin) * (max - min) / chartWidth;
+    };
+    
+    let newSalary = unscaleX(x);
+    newSalary = Math.max(min, Math.min(max, newSalary));
+    
+    const currentSalaryInput = document.getElementById('current-salary');
+    currentSalaryInput.value = Math.round(newSalary);
+    drawSalaryBar();
+}
+
+function handleMouseUp(e) {
+    if (isDragging) {
+        isDragging = false;
+        e.preventDefault();
+    }
+}
+
 document.querySelectorAll('.range-input input, #current-salary').forEach(input => {
     input.addEventListener('input', drawSalaryBar);
 });
@@ -135,6 +200,93 @@ function createMiniChart(min, minMid, mid, midMax, max, currentSalary) {
     return canvas;
 }
 
+function validateInputs(data) {
+    for (const [key, value] of Object.entries(data)) {
+        if (value < 0) {
+            alert(`The value for ${key} cannot be negative!`);
+            return false;
+        }
+    }
+
+    if (data.min >= data.minMid) {
+        alert('MIN value must be less than MIN MID value!');
+        return false;
+    }
+    if (data.minMid >= data.mid) {
+        alert('MIN MID value must be less than MID value!');
+        return false;
+    }
+    if (data.mid >= data.midMax) {
+        alert('MID value must be less than MID MAX value!');
+        return false;
+    }
+    if (data.midMax >= data.max) {
+        alert('MID MAX value must be less than MAX value!');
+        return false;
+    }
+
+    return true;
+}
+
+function validateOnInput() {
+    const inputs = {
+        min: document.getElementById('min'),
+        minMid: document.getElementById('min-mid'),
+        mid: document.getElementById('mid'),
+        midMax: document.getElementById('mid-max'),
+        max: document.getElementById('max')
+    };
+
+    const values = {
+        min: parseFloat(inputs.min.value) || 0,
+        minMid: parseFloat(inputs.minMid.value) || 0,
+        mid: parseFloat(inputs.mid.value) || 0,
+        midMax: parseFloat(inputs.midMax.value) || 0,
+        max: parseFloat(inputs.max.value) || 0
+    };
+
+    // Korekta wartości ujemnych
+    if (values.min < 0) {
+        inputs.min.value = 0;
+    }
+    if (values.minMid < 0) {
+        inputs.minMid.value = 0;
+    }
+    if (values.mid < 0) {
+        inputs.mid.value = 0;
+    }
+    if (values.midMax < 0) {
+        inputs.midMax.value = 0;
+    }
+    if (values.max < 0) {
+        inputs.max.value = 0;
+    }
+
+    // Korekta wartości
+    if (values.min >= values.minMid) {
+        inputs.min.value = values.minMid - 1;
+    }
+    if (values.minMid >= values.mid) {
+        inputs.minMid.value = values.mid - 1;
+    }
+    if (values.mid >= values.midMax) {
+        inputs.mid.value = values.midMax - 1;
+    }
+    if (values.midMax >= values.max) {
+        inputs.midMax.value = values.max - 1;
+    }
+
+    // Usuń wszystkie klasy error
+    Object.values(inputs).forEach(input => input.classList.remove('error'));
+}
+
+document.querySelectorAll('.range-input input').forEach(input => {
+    input.addEventListener('input', () => {
+        validateOnInput();
+        drawSalaryBar();
+    });
+});
+
 document.getElementById('predict-button').addEventListener('click', async () => {
     const data = {
         currentSalary: parseFloat(document.getElementById('current-salary').value),
@@ -146,6 +298,10 @@ document.getElementById('predict-button').addEventListener('click', async () => 
         midMax: parseFloat(document.getElementById('mid-max').value),
         max: parseFloat(document.getElementById('max').value)
     };
+
+    if (!validateInputs(data)) {
+        return;
+    }
 
     try {
         const response = await fetch('/predict', {
@@ -199,5 +355,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('salaryChart');
     canvas.width = 800;
     canvas.height = 200;
+    
+    canvas.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    
     drawSalaryBar();
 }); 

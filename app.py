@@ -33,7 +33,7 @@ def index():
 
 
 def calculate_salary_prediction(
-    current_salary, market_growth, raise_percentage, years=5
+    current_salary, market_growth, raise_percentage, years=6
 ):
     predictions = []
     current_year = 2025
